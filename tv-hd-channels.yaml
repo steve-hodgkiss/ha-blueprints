@@ -1,0 +1,39 @@
+blueprint:
+  name: "TV HD Channel Switcher (London)"
+  description: "Maps Freeview SD→HD"
+  domain: automation
+  input:
+    media_player:
+      name: TV Media Player
+      selector: {entity: {domain: media_player, device_class: tv}}
+
+variables:
+  channel_num: "{{ trigger.to_state.attributes.media_content_id | int }}"
+  mapping:
+    1: 101    # BBC One → BBC One HD
+    2: 102    # BBC Two → BBC Two HD
+    3: 103    # ITV → ITV HD
+    4: 104    # Channel 4 → C4 HD
+    5: 105    # Channel 5 → 5 HD
+    9: 106    # BBC Four → BBC Four HD
+    201: 203  # CBBC → CBBC HD
+    202: 204  # CBeebies → CBeebies HD
+
+trigger:
+  - trigger: state
+    entity_id: !input media_player
+    attribute: media_channel
+
+condition:
+  - condition: template
+    value_template: "{{ channel_num in mapping }}"
+
+action:
+  - service: media_player.play_media
+    target:
+      entity_id: !input media_player
+    data:
+      media_content_type: channel
+      media_content_id:  "{{ mapping[channel_num] | string }}"
+
+mode: single
